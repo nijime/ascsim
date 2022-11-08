@@ -1,6 +1,16 @@
+/** DBReader.java
+ *
+ * Uses JDBC to interface with the DB
+ *
+ *
+ *
+ */
+
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 public class DBReader {
 
@@ -10,6 +20,8 @@ public class DBReader {
     private static final String password = "22436";
 
     private Connection connection = null;
+
+    private long nanoTimeStart;
 
     public DBReader() {
         try {
@@ -33,10 +45,13 @@ public class DBReader {
     }
 
     public void connect() {
+        nanoTimeStart = System.nanoTime();
+
         try {
             Connection connection = DriverManager.getConnection(URL, username, password);
-            System.out.println("[DBReader] Connected");
+            System.out.println("[DBReader] Connected after " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - nanoTimeStart) + " ms");
             this.connection = connection;
+            nanoTimeStart = System.nanoTime();
         } catch (Exception e) {
             System.out.println("[DBReader] Failed to connect to the database");
             System.exit(-1);
@@ -90,6 +105,7 @@ public class DBReader {
 
     }
 
+    // this is really bad because i didnt know how to do sql
     public String buildQueryFromFields(ArrayList<Field> fields, String table) {
         String query = "SELECT TOP (1000)\n";
 
@@ -143,11 +159,12 @@ public class DBReader {
         try {
             connection.close();
             this.connection = null;
-            System.out.println("[DBReader] Closed connection");
+            System.out.println("[DBReader] Closed connection after " + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - nanoTimeStart) + " ms");
         } catch (Exception e) {
             System.out.println("[DBReader] Error occurred when attempting to close connection");
             System.exit(-1);
         }
+
 
     }
 

@@ -1,20 +1,67 @@
 import java.util.LinkedList;
 
 public class CombatLog {
-    private static final int COMBATLOG_CAPACITY = 10;
+    private static final int COMBATLOG_CAPACITY = 30;
 
     private LinkedList<CombatLogEvent> eventList;
+    private GameState gameState;
 
-    public CombatLog() {
+    private double lastTime;
+
+    public CombatLog(GameState gameState) {
         this.eventList = new LinkedList<CombatLogEvent>();
+        this.gameState = gameState;
+
+        this.lastTime = 0.0;
+
     }
 
+    /** logEvent
+     *
+     * Adds the passed event to the combatlog and postprocesses it
+     *
+     * @param cle
+     */
     public void logEvent(CombatLogEvent cle) {
         eventList.addFirst(cle);
         if (eventList.size() >= COMBATLOG_CAPACITY) {
             eventList.removeLast();
         }
 
-        System.out.println(String.valueOf(cle.getID()) + ", " + cle.getAmt() + ", " + String.valueOf(cle.getCrit()));
+        if (cle.getTime() != lastTime) {
+            System.out.println();
+        }
+
+        lastTime = cle.getTime();
+        System.out.println(cle.toString());
+
+        processPost(cle);
     }
+
+    /** processPost
+     *
+     * Responds to cles as required, ex. procs on SPELL_DAMAGE
+     *
+     *
+     * @param cle
+     */
+    private void processPost(CombatLogEvent cle) {
+
+        // triggers are listening
+        gameState.getTriggers().process(cle);
+
+        switch (cle.getSubEvent()) {
+            case "SPELL_CAST_SUCCESS":
+                // remove auras if an aura was used to allow this spell's casting
+                int auraToRemove = cle.getParam(5); // suffix 4
+                if (auraToRemove != -1) {
+                    gameState.getPlayer().removeBuffByID(auraToRemove);
+                }
+                break;
+            default:
+                // do nothing
+                break;
+        }
+    }
+
 }

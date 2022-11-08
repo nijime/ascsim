@@ -1,15 +1,16 @@
+/** SpellManager.java
+ *
+ * Imports Spells from the database and saves references to the populated Spell objects
+ *
+ */
+
 import java.sql.ResultSet;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
 public class SpellManager {
 
     private static HashMap<Integer, String> nameMap = new HashMap<Integer, String>();
-
-    public static String getName(int ID) {
-        return nameMap.get(ID);
-    }
 
     private HashMap<Integer, Spell> spellList;
     private GameState gameState;
@@ -34,7 +35,7 @@ public class SpellManager {
                     continue;
                 }
 
-                Spell thisSpell = new Spell(ID, result, reader);
+                Spell thisSpell = new Spell(ID, result, reader, gameState);
                 spellList.put(ID, thisSpell);
             }
 
@@ -45,18 +46,42 @@ public class SpellManager {
         }
     }
 
+    /** getName
+     *
+     * Returns the name of the spell with given ID
+     *
+     * @param ID
+     * @return
+     */
+    public static String getName(int ID) {
+        return nameMap.get(ID);
+    }
+
     public void setGameState(GameState gameState) {
         this.gameState = gameState;
     }
 
+    /** canCastSpell
+     *
+     * Returns whether the spell with the given ID can be cast at the current time
+     *
+     * @param ID
+     * @return
+     */
     public boolean canCastSpell(int ID) {
         return spellList.get(ID).canCast(gameState);
     }
 
-    public Event cast(int ID) {
+    /** cast
+     *
+     * Casts the spell with the given ID, if the player is not currently busy
+     *
+     * @param ID
+     */
+    public void cast(int ID) {
         if (gameState == null) {
             System.out.println("[SpellManager] Assign a gamestate to this spell manager");
-            return null;
+            return;
         }
 
         boolean canCast = !gameState.onGCD() && !gameState.casting();
@@ -68,15 +93,7 @@ public class SpellManager {
         }
 
         Spell toCast = spellList.get(ID);
-        return toCast.cast(gameState);
+        toCast.cast(gameState);
+        //return toCast.cast(gameState);
     }
-
-   /* public Event cast(int ID, GameState gameState) {
-        Spell toCast = spellList.get(ID);
-        return toCast.cast(gameState);
-    }*/
-
-
-
-
 }

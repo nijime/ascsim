@@ -1,3 +1,14 @@
+/** Modify.java
+ *
+ * Number wrapper used to update values by reference
+ *
+ * Allows separation of additives and multiplicatives in the form of another Modify
+ *
+ * Attempts to only update internal values if referenced Modify's have changed
+ *
+ * Multiplication is performed before addition
+ */
+
 import java.util.ArrayList;
 
 public class Modify extends SimpleModify {
@@ -41,6 +52,15 @@ public class Modify extends SimpleModify {
     }
 
 
+    /** mult(double val, int multiplicativity
+     *
+     * Adds a multiplier with the given base value. Multipliers with the same multiplicativity will be added before being factored
+     * into this object's calculation. Multipliers with different multiplicativities will be multiplied before being factored into
+     * this object's calculation
+     *
+     * @param val
+     * @param multiplicativity
+     */
     public void mult(double val, int multiplicativity) {
         changed = true;
 
@@ -58,17 +78,35 @@ public class Modify extends SimpleModify {
         //mults.set(multiplicativity, curMult + val);
     }
 
+    /** mult (double val)
+     *
+     * Adds a multiplier with multiplicativity 0 (see mult(double, int))
+     *
+     * @param val
+     */
     public void mult (double val) {
         mult(val, 0);
 
     }
 
+    /** mult (int val)
+     *
+     * Adds a multiplier with multiplicativity 0 (see mult(double, int))
+     *
+     * @param val
+     */
     public void mult (int val) {
         mult((double) val, 0);
 
     }
 
 
+    /** add(SimpleModify val)
+     *
+     * Adds the SimpleModify or Modify to the set of adds to be calculated into this object's final value
+     *
+     * @param val
+     */
     public void add(SimpleModify val) {
         changed = true;
 
@@ -81,6 +119,12 @@ public class Modify extends SimpleModify {
         adds.add(val);
     }
 
+    /** add(double val)
+     *
+     * Adds the value to the set of adds to be calculated into this object's final value
+     *
+     * @param val
+     */
     public void add(double val) {
         if (adds == null) {
             this.adds = new ArrayList<SimpleModify>();
@@ -91,6 +135,12 @@ public class Modify extends SimpleModify {
         adds.add(new SimpleModify(val));
     }
 
+    /** calculate
+     *
+     * Calculates this object's final value from its listed multipliers and adders
+     *
+     * Multiplication is performed before addition
+     */
     public void calculate() {
         double calced = base.getDouble();
 
@@ -111,6 +161,12 @@ public class Modify extends SimpleModify {
         resulting = calced;
     }
 
+    /** anyModChanged
+     *
+     * Returns whether any mult or add contributing to this value has changed
+     *
+     * @return
+     */
     private boolean anyModChanged() {
         if (mults != null) {
             for (SimpleModify m : mults) {

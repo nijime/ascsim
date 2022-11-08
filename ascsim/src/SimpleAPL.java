@@ -1,3 +1,9 @@
+/** SimpleAPL.java
+ *
+ * A list of spells to cast in order of priority. If the first can't be cast, attempt to cast the second, etc.
+ *
+ */
+
 import java.util.ArrayList;
 
 public class SimpleAPL {
@@ -13,13 +19,23 @@ public class SimpleAPL {
         prioList.add(ID);
     }
 
-    public int getNext(GameState gameState, SpellManager spellManager) { // returns the ID of the next spell to cast
+    /** getNext
+     *
+     * returns the ID of the next spell to cast
+     *
+     * @param gameState
+     * @param spellManager
+     * @return
+     */
+    public int getNext(GameState gameState, SpellManager spellManager) {
 
         int i = 0;
         while (i < prioList.size()) {
             int ID = prioList.get(i);
 
-            if (spellManager.canCastSpell(ID)) {
+            Target curTarget = gameState.getTarget(gameState.curTargetID());
+
+            if (spellManager.canCastSpell(ID) && !curTarget.hasAura(ID)) { // TODO hardcoded to not cast a spell if target has same-ID aura already
                 return ID;
             }
 

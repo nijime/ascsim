@@ -1,3 +1,5 @@
+// TODO useless?
+
 public class Field {
     private enum Type {
         INT(0), DECIMAL(1), BIT(2), VARCHAR(3);

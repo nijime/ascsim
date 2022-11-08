@@ -1,3 +1,8 @@
+/**
+ *
+ * Parent to the Modify class. Multipliers and adders are not separated, so this class is more lightweight than Modify
+ */
+
 import java.util.ArrayList;
 
 public class SimpleModify {
