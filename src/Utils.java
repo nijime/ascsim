@@ -5,6 +5,20 @@
  */
 
 public class Utils {
+    public enum Resource {
+        mana(0), rage(1), energy(2);
+
+        private int val;
+
+        Resource(int val) {
+            this.val = val;
+        }
+
+        public int asInt() {
+            return val;
+        }
+    }
+
     public enum MainStat {
         strength(0), agility(1), intellect(2), spirit(3);
 
@@ -19,6 +33,19 @@ public class Utils {
         }
     }
 
+    public enum EffectType {
+        apply_aura_to_caster(0), apply_aura_to_target(1), remove_aura(2), unleash_seal(3);
+
+        private int val;
+
+        EffectType(int val) {
+            this.val = val;
+        }
+
+        public int asInt() {
+            return val;
+        }
+    }
 
     public enum School {
         physical(0), holy(1), frost(2), shadow(3), nature(4), fire(5), arcane(6),

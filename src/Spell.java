@@ -5,6 +5,7 @@
  */
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 
 public class Spell {
@@ -25,7 +26,7 @@ public class Spell {
 
 
     private enum Req {
-        enemyhpmax(0), enemyhpmin(1), hasbuff(2);
+        min_health(1), max_health(2), has_buff(3), target_has_debuff(4);
 
         private int val;
 
@@ -39,19 +40,34 @@ public class Spell {
     }
 
     private int ID;
-    private Modify base_dmg_min;
-    private Modify base_dmg_max;
-    private Modify base_scaling_SP;
-    private Modify base_scaling_AP;
-    private Modify cast_time;
-    private boolean cast_haste;
-    private Modify gcd;
-    private boolean gcd_haste;
-    private Modify cooldown;
 
     private SpellType spellType;
     private Utils.School school;
+    private boolean isChannelled;
+    private Utils.Resource resourceType;
+    private Modify resourceCost;
+    private Modify cast_time;
+    private Modify gcd;
+    private Modify cooldown;
+    private boolean cast_haste;
+    private boolean gcd_haste;
+
     private Utils.School damageSchool;
+    private int numTargets;
+    private boolean splitDmg;
+    private Modify base_dmg_min;
+    private Modify base_dmg_max;
+    private Modify numHits;
+    private Modify base_scaling_SP;
+    private Modify base_scaling_AP;
+
+    private boolean weaponScaling;
+    private double daggerMH;
+    private double mediumMH;
+    private double largeMH;
+    private double daggerOH;
+    private double mediumOH;
+    private double largeOH;
 
     private int lastHash;
     private double lastCast;
@@ -60,88 +76,155 @@ public class Spell {
     private HashMap<Req, Integer> reqs;
 
 
-    public Spell(int ID, ResultSet record, DBReader reader, GameState gameState) {
+    public boolean hasDamage() {
+        return damageSchool != null;
+    }
+
+    public boolean hasWeaponScaling() {
+        return weaponScaling;
+    }
+
+    public boolean hasCost() {
+        return resourceType != null;
+    }
+
+    public Spell(int ID, ResultSet spellTable, DBReader reader, GameState gameState) {
         this.ID = ID;
 
         try {
-            // read basic spell fields
-            this.base_dmg_min = new Modify(record.getInt("base_dmg_min"));
-            this.base_dmg_max = new Modify(record.getInt("base_dmg_max"));
-            this.base_scaling_SP = new Modify(record.getDouble("base_scaling_SP") / 100.0); // convert percentage value to decimal value
-            this.base_scaling_AP = new Modify(record.getDouble("base_scaling_AP") / 100.0);
-            this.cast_time = new Modify(record.getDouble("cast_time"));
-            this.cast_haste = record.getBoolean("cast_haste");
-            this.gcd = new Modify(record.getDouble("gcd"));
-            this.gcd_haste = record.getBoolean("gcd_haste");
-            this.cooldown = new Modify(record.getDouble("cooldown"));
+            /// fields from Spell table
+            this.spellType = SpellType.values()[spellTable.getInt("typeID")];
+            this.school = Utils.School.values()[spellTable.getInt("schoolID")];
+            this.isChannelled = spellTable.getBoolean("isChannelled");
+            this.resourceType = Utils.Resource.values()[spellTable.getInt("resourceType")];
+            this.resourceCost = new Modify(spellTable.getInt("cost"));
+            this.cast_time = new Modify(spellTable.getDouble("castTime"));
+            this.gcd = new Modify(spellTable.getDouble("GCD"));
+            this.cooldown = new Modify(spellTable.getDouble("cooldown"));
 
-            this.spellType = SpellType.valueOf(record.getString("spell_type"));
-            this.school = Utils.School.valueOf(record.getString("school"));
-            this.damageSchool = Utils.School.valueOf(record.getString("dmg_school"));
+            switch (spellType) {
+                case melee:
+                    this.cast_haste = false;
+                    this.gcd_haste = false;
+                    break;
+                case ranged: // TODO check
+                    this.cast_haste = false;
+                    this.gcd_haste = false;
+                    break;
+                case spell:
+                    this.cast_haste = true;
+                    this.gcd_haste = true;
+                    break;
 
-            // read spell requirements
+            }
+
+            /// fields from Spelldamage table
+            this.damageSchool = Utils.School.values()[spellTable.getInt("dmgSchool")];
+            if (spellTable.wasNull()) { // no Spelldamage records for this spell
+                this.damageSchool = null;
+            } else {
+                this.numTargets = spellTable.getInt("numTargets");
+                this.splitDmg = spellTable.getBoolean("split");
+                this.base_dmg_min = new Modify(spellTable.getInt("dmgMin"));
+                this.base_dmg_max = new Modify(spellTable.getInt("dmgMax"));
+                this.numHits = new Modify(spellTable.getInt("numHits"));
+                this.base_scaling_SP = new Modify(spellTable.getDouble("scalingSP") / 100.0); // convert percentage value to decimal value
+                this.base_scaling_AP = new Modify(spellTable.getDouble("scalingAP") / 100.0);
+            }
+
+
+            /// fields from Weaponscaling table
+            int numNull = 0;
+            this.daggerMH = spellTable.getDouble("daggerMH");
+            if (spellTable.wasNull()) {
+                numNull++;
+            }
+            this.mediumMH = spellTable.getDouble("mediumMH");
+            if (spellTable.wasNull()) {
+                numNull++;
+            }
+            this.largeMH = spellTable.getDouble("largeMH");
+            if (spellTable.wasNull()) {
+                numNull++;
+            }
+            this.daggerOH = spellTable.getDouble("daggerOH");
+            if (spellTable.wasNull()) {
+                numNull++;
+            }
+            this.mediumOH = spellTable.getDouble("mediumOH");
+            if (spellTable.wasNull()) {
+                numNull++;
+            }
+            this.largeOH = spellTable.getDouble("largeOH");
+            if (spellTable.wasNull()) {
+                numNull++;
+            }
+
+            this.weaponScaling = true;
+            if (numNull >= 6) {
+                this.weaponScaling = false;
+            }
+
+
+            /// read spell requirements
             this.reqs = new HashMap<Req, Integer>();
 
-            ResultSet reqSet = reader.doQuery("SELECT conditions FROM spells.spellreq WHERE spell_id=" +
+            ResultSet reqSet = reader.doQuery("SELECT * FROM spells.SpellReq WHERE spellID=" +
                     String.valueOf(ID) + ";");
 
 
-            // basic parsing of spell HP or buff requirements
-            if(reqSet.next()) {
-                String reqStr = reqSet.getString("conditions");
-                //System.out.println(reqStr);
-                String[] reqSplit = reqStr.split("\\|\\|");
-                //System.out.println(reqSplit[0]);
-                for (String r : reqSplit) {
-                    if (r.contains("enemyhp")) {
-                        char comp = r.charAt(7);
-                        int val = Integer.parseInt(r.substring(8));
+            /// basic parsing of spell HP or buff requirements
+            try {
+                while(reqSet.next()) {
+                    Req reqType = Req.values()[reqSet.getInt("reqType")-1]; /// subtract 1 because DB indexes at 1
+                    int arg1 = reqSet.getInt("reqArg1");
 
-                        switch (comp) {
-                            case '<':
-                                reqs.put(Req.enemyhpmax, val);
-                                break;
-                            case '>':
-                                reqs.put(Req.enemyhpmin, val);
-                                break;
-                        }
+                    reqs.put(reqType, arg1);
 
-                        continue;
-                    }
-
-                    if (r.contains("hasbuff")) {
-                        int buffid = Integer.parseInt(r.substring(8).replace(")", ""));
-                        reqs.put(Req.hasbuff, buffid);
-                        continue;
-                    }
                 }
+            } catch (SQLException e) {
+                System.out.println("[Spell] Failed to import spell requirements for " +  ID);
+                e.printStackTrace();
             }
 
             // query whether this spell has baseline effects
-            ResultSet effectSet = reader.doQuery("SELECT * FROM effects.spelleffect WHERE spell_id=" +
+            ResultSet effectSet = reader.doQuery("SELECT * FROM spells.SpellEffect WHERE spellID=" +
                     String.valueOf(ID) + ";");
 
             if (effectSet.next()) {
-                String effectType = effectSet.getString("effect_name");
-                String args = effectSet.getString("args");
+                Utils.EffectType effectType = Utils.EffectType.values()[effectSet.getInt("effectID")];
+                double effectChance = effectSet.getDouble("effectChance");
+                int arg1 = effectSet.getInt("intArg1");
+                if (effectSet.wasNull()) {
+                    arg1 = -2;
+                }
+                int arg2 = effectSet.getInt("intArg2");
+                if (effectSet.wasNull()) {
+                    arg2 = -2;
+                }
+                double arg3 = effectSet.getDouble("doubleArg");
+                if (effectSet.wasNull()) {
+                    arg3 = -2.0;
+                }
+                String arg4 = effectSet.getString("strArg");
 
                 switch (effectType) {
-                    case "apply_aura_to_target":
+                    case apply_aura_to_caster:
+                        // TODO
+                        break;
+                    case apply_aura_to_target:
                         // load the required aura
-                        AuraManager.loadAuraByID(reader, Integer.parseInt(args));
+                        AuraManager.loadAuraByID(reader, arg1);
 
-                        Effect effectToDo = new EffectApplyAura(false, Integer.parseInt(args));
+
+                        Effect effectToDo = new EffectApplyAura(false, arg1);
 
                         CLETemplate triggerTemplate = new CLETemplate(CombatLogEvent.Prefix.SPELL, CombatLogEvent.Suffix.CAST_SUCCESS);
                         triggerTemplate.watchParamIndex(0, ID);
 
                         CLETrigger spellCastTrigger = new CLETrigger(triggerTemplate, effectToDo);
+                        spellCastTrigger.setChance(effectChance);
                         gameState.getTriggers().register(spellCastTrigger);
-
-
-                        break;
-                    case "apply_aura_to_self":
-                        // TODO i dont think there are any spells with baseline apply to self
 
                         break;
                     default:
@@ -185,7 +268,7 @@ public class Spell {
      * @return
      */
     private CombatLogEvent.SuffixParams rollVal(GameState gameState) {
-        if (this.base_dmg_max.getDouble() == 0.0) {
+        if (!hasDamage()) {
             return null;
         }
 
@@ -222,16 +305,16 @@ public class Spell {
         boolean enemyhpcheck = true;
 
         // hardcoded to check from target 1
-        if (reqs.containsKey(Req.enemyhpmax)) {
-            enemyhpcheck = gameState.getTarget(1).getHPP() <= reqs.get(Req.enemyhpmax);
-        } else if (reqs.containsKey(Req.enemyhpmin)) {
-            enemyhpcheck = gameState.getTarget(1).getHPP() >= reqs.get(Req.enemyhpmax);
+        if (reqs.containsKey(Req.max_health)) {
+            enemyhpcheck = gameState.getTarget(1).getHPP() <= reqs.get(Req.max_health);
+        } else if (reqs.containsKey(Req.min_health)) {
+            enemyhpcheck = gameState.getTarget(1).getHPP() >= reqs.get(Req.min_health);
         }
 
         boolean hasbuffcheck = true;
 
-        if (reqs.containsKey(Req.hasbuff)) {
-            hasbuffcheck = gameState.getPlayer().hasBuff(reqs.get(Req.hasbuff));
+        if (reqs.containsKey(Req.has_buff)) {
+            hasbuffcheck = gameState.getPlayer().hasBuff(reqs.get(Req.has_buff));
         }
 
         return cdCheck && (enemyhpcheck || hasbuffcheck);
@@ -250,33 +333,33 @@ public class Spell {
 
         // determine whether an aura should be removed
         int auraToRemove = -1;
-        if (reqs.containsKey(Req.enemyhpmax)) {
+        if (reqs.containsKey(Req.max_health)) {
             boolean enemyhpcheck = true;
 
-            if (reqs.containsKey(Req.hasbuff)) {
+            if (reqs.containsKey(Req.has_buff)) {
                 boolean hasbuffcheck = true;
 
-                enemyhpcheck = gameState.getTarget(1).getHPP() <= reqs.get(Req.enemyhpmax);
-                hasbuffcheck = gameState.getPlayer().hasBuff(reqs.get(Req.hasbuff));
+                enemyhpcheck = gameState.getTarget(1).getHPP() <= reqs.get(Req.max_health);
+                hasbuffcheck = gameState.getPlayer().hasBuff(reqs.get(Req.has_buff));
 
                 if (!enemyhpcheck && hasbuffcheck) { // player uses a buff to fulfill spell cast requirements
                     //gameState.getPlayer().removeBuffByID(reqs.get(Req.hasbuff)); // consume the buff
-                    auraToRemove = reqs.get(Req.hasbuff);
+                    auraToRemove = reqs.get(Req.has_buff);
                 }
             }
 
-        } else if (reqs.containsKey(Req.enemyhpmin)) {
+        } else if (reqs.containsKey(Req.min_health)) {
             boolean enemyhpcheck = true;
 
-            if (reqs.containsKey(Req.hasbuff)) {
+            if (reqs.containsKey(Req.has_buff)) {
                 boolean hasbuffcheck = true;
 
-                enemyhpcheck = gameState.getTarget(1).getHPP() >= reqs.get(Req.enemyhpmax);
-                hasbuffcheck = gameState.getPlayer().hasBuff(reqs.get(Req.hasbuff));
+                enemyhpcheck = gameState.getTarget(1).getHPP() >= reqs.get(Req.max_health);
+                hasbuffcheck = gameState.getPlayer().hasBuff(reqs.get(Req.has_buff));
 
                 if (!enemyhpcheck && hasbuffcheck) { // player uses a buff to fulfill spell cast requirements
                     //gameState.getPlayer().removeBuffByID(reqs.get(Req.hasbuff)); // consume the buff
-                    auraToRemove = reqs.get(Req.hasbuff);
+                    auraToRemove = reqs.get(Req.has_buff);
                 }
             }
         }

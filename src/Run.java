@@ -1,3 +1,4 @@
+import java.util.concurrent.TimeUnit;
 
 public class Run {
     /* TODO delete?
@@ -21,7 +22,8 @@ public class Run {
     public static void main(String[] args) {
 
         Control.run(Control.DEFAULT_APL, Control.DEFAULT_CHAR, 120.0);
-
+        System.out.println("Sim took " + Model.getExecutionTime() +  " ms");
+        /// 11/11 - 13ms + 2ms/minute
 
         System.out.println("\nDPS: " + Model.getDPS());
         System.out.println("Spell statistics: ");

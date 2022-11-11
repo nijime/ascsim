@@ -28,35 +28,43 @@ public class Talent {
      */
     public void loadSpellEffectTriggers(DBReader reader, TriggerManager triggerManager) {
 
-        ResultSet result = reader.doQuery("SELECT * FROM talents.talentspelleffect " +
-                " WHERE spell_id = '" + spellID + "' " +
-                " and talent_rank = '" + rank + "' " +
+        ResultSet result = reader.doQuery("SELECT * FROM talents.TalentSpellEffect " +
+                " WHERE talentID = '" + spellID + "' " +
+                " and talentRank = '" + rank + "' " +
                 ";");
 
         try {
             while (result.next()) {
-                int spellSpellID = result.getInt("spell_spell_id");
-                String effectName = result.getString("effect_name");
-                double magnitude = result.getDouble("magnitude"); // not used for apply_aura
-                String args = result.getString("args");
-                double chance = result.getDouble("chance");
+                int spellSpellID = result.getInt("spellID");
+                Utils.EffectType effectType = Utils.EffectType.values()[result.getInt("effectID") - 1]; /// subtract because DB indexes at 1
+                double chance = result.getDouble("effectChance");
+
+                int arg1 = result.getInt("intArg1");
+                if (result.wasNull()) {
+                    arg1 = -2;
+                }
+                int arg2 = result.getInt("intArg2");
+                if (result.wasNull()) {
+                    arg2 = -2;
+                }
+                double arg3 = result.getDouble("doubleArg");
+                if (result.wasNull()) {
+                    arg3 = -2.0;
+                }
+                String arg4 = result.getString("strArg");
 
                 Effect thisEffect = null;
 
-                int auraToApply = Integer.parseInt(args);
-
-                switch (effectName.toLowerCase()) {
-                    case "apply_aura_to_target":
-                        thisEffect = new EffectApplyAura(false, auraToApply); // TODO currently only allowing independent procs of single effects (separate args out, use array?)
-                        AuraManager.loadAuraByID(reader, auraToApply); // load necessary auras as we find them
+                switch (effectType) {
+                    case apply_aura_to_caster:
+                        thisEffect = new EffectApplyAura(true, arg1); // TODO currently only allowing independent procs of single effects (separate args out, use array?)
+                        AuraManager.loadAuraByID(reader, arg1);
                         break;
-                    case "apply_aura_to_caster":
-                        thisEffect = new EffectApplyAura(true, Integer.parseInt(args)); // TODO currently only allowing independent procs of single effects (separate args out, use array?)
-                        AuraManager.loadAuraByID(reader, auraToApply);
+                    case apply_aura_to_target:
+                        thisEffect = new EffectApplyAura(false, arg1); // TODO currently only allowing independent procs of single effects (separate args out, use array?)
+                        AuraManager.loadAuraByID(reader, arg1); // load necessary auras as we find them
                         break;
-                    default:
-                        // do nothing
-                        break;
+                        //TODO other effectTypes
                 }
 
                 CLETemplate template = new CLETemplate(CLEDescriptor.Prefix.SPELL, CLEDescriptor.Suffix.CAST_SUCCESS);
@@ -70,6 +78,7 @@ public class Talent {
             }
         } catch (Exception e) {
             System.out.println("[Talent] Failed to import spell effects for talent with ID " + spellID + " and rank " + rank);
+            e.printStackTrace();
             return;
         }
 

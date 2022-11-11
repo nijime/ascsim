@@ -6,8 +6,6 @@
  *
  */
 
-import java.util.ArrayList;
-
 public class CombatLogEvent extends CLEDescriptor implements Comparable<CombatLogEvent> {
 
     // 0 - timestamp, 1 - subevent, 2 - sourceID, 3 - destID

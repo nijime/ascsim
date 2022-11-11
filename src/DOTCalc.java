@@ -7,9 +7,7 @@
  * Assumes all DoTs are debuffs on enemy targets
  */
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map.Entry;
 
 public class DOTCalc {
     private final static int MAXTARGETS = 10;// TODO 10 is hardcoded max targets

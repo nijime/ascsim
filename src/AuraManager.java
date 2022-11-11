@@ -50,7 +50,7 @@ public class AuraManager {
            return;
         }
 
-        ResultSet result = reader.doQuery("SELECT * FROM auras.aura WHERE spell_id = '" + ID + "';");
+        ResultSet result = reader.doQuery("SELECT * FROM auras.Aura WHERE auraID = '" + ID + "';");
 
         try {
             if (!result.next()) {
@@ -58,21 +58,21 @@ public class AuraManager {
                 System.exit(-1);
             }
 
-            String auraName = result.getString("aura_name");
-            boolean harmful = result.getBoolean("is_harmful");
-            double duration = result.getDouble("base_duration");
+            String auraName = result.getString("auraName");
+            boolean harmful = result.getBoolean("isHarmful");
+            double duration = result.getDouble("baseDuration");
 
             // check if this aura is also a periodic type
-            ResultSet pResult = reader.doQuery("SELECT * FROM auras.auraperiodic WHERE parent_spell_id = '" + ID + "';");
+            ResultSet pResult = reader.doQuery("SELECT * FROM auras.Auraperiodic WHERE parentID = '" + ID + "';");
 
             if (pResult.next()) {
-                int numTicks = pResult.getInt("num_ticks");
-                int totalDamage = pResult.getInt("total_damage");
-                double scalingSP = pResult.getDouble("dot_scaling_SP");
-                double scalingAP = pResult.getDouble("dot_scaling_AP");
-                String dmgSchool = pResult.getString("dmg_school");
+                int numTicks = pResult.getInt("numTicks");
+                int totalDamage = pResult.getInt("dmgTotal");
+                double scalingSP = pResult.getDouble("scalingSP");
+                double scalingAP = pResult.getDouble("scalingAP");
+                Utils.School dmgSchool = Utils.School.values()[pResult.getInt("dmgSchool")];
 
-                AuraPeriodic thisAura = new AuraPeriodic(ID, harmful, duration, Utils.School.valueOf(dmgSchool), numTicks, totalDamage, scalingSP, scalingAP);
+                AuraPeriodic thisAura = new AuraPeriodic(ID, harmful, duration, dmgSchool, numTicks, totalDamage, scalingSP, scalingAP);
                 auraMap.put(ID, thisAura);
                 nameMap.put(ID, auraName);
 

@@ -9,7 +9,6 @@
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 public class DBReader {

@@ -1,3 +1,12 @@
+/** Pair.java
+ *
+ * Acts like an instantiatable Entry
+ *
+ *
+ * @param <T>
+ * @param <U>
+ */
+
 public class Pair<T, U> {
     private T key;
     private U val;

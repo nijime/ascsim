@@ -4,8 +4,6 @@
  *
  */
 
-import java.util.HashMap;
-
 public class Target extends Entity {
 
     private int unitID;

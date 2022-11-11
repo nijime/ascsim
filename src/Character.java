@@ -433,20 +433,6 @@ public class Character extends Entity {
     public Modify getRangedHit() { return this.rangedHit; }
     public Modify getRangedHasteP() { return this.rangedHasteP; }
 
-    /*
-
-
-            physical(0), holy(1), frost(2), shadow(3), nature(4), fire(5), arcane(6),
-        // extended schools
-        froststorm(7), // nature and frost
-        divine(8), // arcane and holy
-        elemental(9), // nature, fire, frost
-        astral(10), // arcane and nature
-        spellfire(11), // arcane and fire
-        twilight(12), // shadow and holy
-        plague(13), // shadow and nature
-        radiant(14); // fire and holy
-     */
     public Modify getSp() { return this.sp; }
     public Modify getHolySP() { return this.holySP; }
     public Modify getFrostSP() { return this.frostSP; }

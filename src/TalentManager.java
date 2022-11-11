@@ -29,8 +29,8 @@ public class TalentManager {
             int ID = pair.getKey();
             int rank = pair.getValue();
 
-            ResultSet result = reader.doQuery("SELECT * FROM talents.talent WHERE spell_id = '" + ID +
-                    "' and talent_rank = '" + rank + "';");
+            ResultSet result = reader.doQuery("SELECT * FROM talents.Talent WHERE talentID = '" + ID +
+                    "' and talentRank = '" + rank + "';");
 
             try {
                 if (!result.next()) {

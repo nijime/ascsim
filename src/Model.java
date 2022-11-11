@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class Model {
     public static class SpellDisplayRow implements Comparable<SpellDisplayRow> {
@@ -188,6 +189,10 @@ public class Model {
         Collections.sort(auraRows, Collections.reverseOrder());
 
         return auraRows;
+    }
+
+    public static int getExecutionTime() {
+        return (int) TimeUnit.NANOSECONDS.toMillis(summary.getExecutionTime());
     }
 
 }

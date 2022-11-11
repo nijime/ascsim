@@ -110,7 +110,13 @@ public class Summary {
     private HashMap<Integer, SpellInfo> spells;
     private HashMap<Integer, AuraInfo> auras;
 
+    long start;
+    long end;
+
     public Summary() {
+        start = 0;
+        end = 0;
+
         totalDamage = 0;
         timePassed = 0;
 
@@ -301,5 +307,18 @@ public class Summary {
         }
 
         return auras.get(ID).getApplications();
+    }
+
+
+    public void startTime() {
+        this.start = System.nanoTime();
+    }
+
+    public void endTime() {
+        this.end = System.nanoTime();
+    }
+
+    public long getExecutionTime() {
+        return end - start;
     }
 }

@@ -23,12 +23,15 @@ public class SpellManager {
     public void importSpells(DBReader reader, HashSet<Integer> toLoad) {
         HashMap<Integer, Spell> spellMap = new HashMap<Integer, Spell>();
 
-        ResultSet result = reader.retrieveRecords("[spells].[offensive]");
-
+        //ResultSet result = reader.retrieveRecords("[spells].[offensive]");
+        //ResultSet result = reader.doQuery("SELECT * FROM spells.Spell;");
+        ResultSet result = reader.doQuery("SELECT * " +
+                "FROM (spells.Spell LEFT OUTER JOIN spells.Spelldamage AS A ON spells.Spell.spellID = A.spellID) " +
+                "LEFT OUTER JOIN spells.Weaponscaling ON A.spellID = spells.Weaponscaling.spellID;");
         try {
             while (result.next()) {
-                int ID = result.getInt("spell_id");
-                String name = result.getString("spell_name");
+                int ID = result.getInt("spellID");
+                String name = result.getString("spellName");
                 nameMap.put(ID, name);
 
                 if (!toLoad.contains(ID)) {

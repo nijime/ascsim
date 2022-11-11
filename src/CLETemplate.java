@@ -1,5 +1,3 @@
-import java.util.ArrayList;
-
 /** CLETemplate.java
  *
  * Template for matching CLEs by only certain fields

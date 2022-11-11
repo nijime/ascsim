@@ -51,11 +51,15 @@ public class Control {
 
         System.out.println(character);
 
+
+        gameState.getSummary().startTime();
         while (gameState.time() < duration) {
             sm.cast(apl.getNext(gameState, sm));
             gameState.waitTillCast();
             gameState.waitTillGCD();
         }
+        gameState.getSummary().endTime();
+
 
         Model.setSummary(gameState.getSummary());
         return 0; // successful run
