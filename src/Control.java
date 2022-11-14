@@ -4,7 +4,7 @@ import java.util.HashSet;
 
 public class Control {
 
-    public static final String DEFAULT_APL = "27180, 27138, 25368, 25364";
+    public static final String DEFAULT_APL = "25368, 25364";
     public static final String DEFAULT_CHAR = "strength=100;agility=100;intellect=100;spirit=100;haste=210;crit=287;hit=10;expertise=12;";
 
     public static final String INVALID_APL_ERROR = "Invalid APL string";
