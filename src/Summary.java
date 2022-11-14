@@ -13,6 +13,8 @@ public class Summary {
         private int ID;
         private int casts;
         private int damage;
+        private int hits;
+        private int misses;
         // damage
         // min
         // max
@@ -23,6 +25,8 @@ public class Summary {
             this.ID = ID;
             this.casts = 1; // class should not be instantiated until the spell is cast once
             this.damage = 0;
+            this.hits = 0;
+            this.misses = 0;
         }
 
         public void addDamage(int dmg) {
@@ -35,6 +39,22 @@ public class Summary {
 
         public int getCasts() {
             return casts;
+        }
+
+        public void addHit() {
+            this.hits += 1;
+        }
+
+        public int getHits() {
+            return hits;
+        }
+
+        public void addMiss() {
+            this.misses += 1;
+        }
+
+        public int getMisses() {
+            return misses;
         }
 
         public int getDamage() {
@@ -148,6 +168,10 @@ public class Summary {
 
                 if (spells.containsKey(param0)) {
                     spells.get(param0).addDamage(cle.getParam(2));
+                    spells.get(param0).addHit();
+                } else {
+                    System.out.println("[Summary] Damage event before cast success?");
+                    System.exit(-1);
                 }
 
                 break;
@@ -158,10 +182,17 @@ public class Summary {
                     info.setCasts(cur+1);
                 } else {
                     SpellInfo newInfo = new SpellInfo(param0);
-                    //newInfo.setCasts(1);
                     spells.put(param0, newInfo);
                 }
 
+                break;
+            case "SPELL_MISSED":
+                if (spells.containsKey(param0)) {
+                    spells.get(param0).addMiss();
+                } else {
+                    System.out.println("[Summary] Miss event before cast success?");
+                    System.exit(-1);
+                }
                 break;
             case "SPELL_AURA_APPLIED":
                 if (auras.containsKey(param0)) {
@@ -239,6 +270,30 @@ public class Summary {
         }
 
         return spells.get(ID).getCasts();
+    }
+
+    public int getNumMisses(int ID) {
+        if (!endStateChecked) {
+            checkEndState();
+        }
+
+        if (!spells.containsKey(ID)) {
+            return 0;
+        }
+
+        return spells.get(ID).getMisses();
+    }
+
+    public int getNumHits(int ID) {
+        if (!endStateChecked) {
+            checkEndState();
+        }
+
+        if (!spells.containsKey(ID)) {
+            return 0;
+        }
+
+        return spells.get(ID).getHits();
     }
 
     public int getSpellDamage(int ID) {

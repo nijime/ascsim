@@ -45,7 +45,12 @@ public class SimpleAPL {
         return -1;
     }
 
-    public ArrayList<Integer> getPrioList() {
+    /**
+     * Return a list of integers for every spellID listed in the APL string
+     *
+     * @return
+     */
+    public ArrayList<Integer> getSpellList() {
         return prioList;
     }
 

@@ -122,6 +122,26 @@ public abstract class Entity {
         }
     }
 
+    /** refreshAura
+     *
+     * Refreshes the aura instance to base duration which is based off the passed Aura
+     *
+     * @param auraParent
+     */
+    public void refreshAura(Aura auraParent) {
+        if (auraParent.isHarmful()) {
+            if (!debuffs.containsKey(auraParent.getID())) {
+                return;
+            }
+            debuffs.get(auraParent.getID()).refreshDuration(gameState.time());
+        } else {
+            if (!buffs.containsKey(auraParent.getID())) {
+                return;
+            }
+            buffs.get(auraParent.getID()).refreshDuration(gameState.time());
+        }
+    }
+
     /** hasAura
      *
      * Returns whether the character has the aura with given ID

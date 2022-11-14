@@ -8,6 +8,8 @@
 
 public class CombatLogEvent extends CLEDescriptor implements Comparable<CombatLogEvent> {
 
+    public final static boolean PRINT_AS_NAMES = false;
+
     // 0 - timestamp, 1 - subevent, 2 - sourceID, 3 - destID
     // Prefix: 0 - spellID, 1 - spellSchool
     // Suffix: 0 - (int), 1 - (int), 2 - (int)
@@ -60,8 +62,26 @@ public class CombatLogEvent extends CLEDescriptor implements Comparable<CombatLo
     public String toString() {
         String paramsStr = "";
         for (int i = 0; i < CLEDescriptor.TOTALPARAMS; i++) {
-            paramsStr += "|" + Utils.rightPad(params.get(i) == -1 ? "" : String.valueOf(params.get(i)), 10);
+            if (!PRINT_AS_NAMES || i != 0) {
+                paramsStr += "|" + Utils.rightPad(params.get(i) == -1 ? "" : String.valueOf(params.get(i)), 10);
+                continue;
+            }
 
+            if (i == 0) {
+                String name = "";
+
+                name = SpellManager.getName(params.get(i));
+                if (name != null) {
+                    paramsStr += "|" + Utils.rightPad(name, 10);
+                    continue;
+                }
+
+                name = AuraManager.getName(params.get(i));
+                if (name != null) {
+                    paramsStr += "|" + Utils.rightPad(name, 10);
+                    continue;
+                }
+            }
         }
 
         return Utils.rightPad(Math.round(time*10)/10.0, 6) + "|" + Utils.rightPad(getSubEvent(), 20) +
@@ -69,6 +89,40 @@ public class CombatLogEvent extends CLEDescriptor implements Comparable<CombatLo
     }
 
     public int compareTo(CombatLogEvent other) {
+        if (this.time == other.time) {
+            /// break tie by event type
+            /// ex. missed should come after success
+            /// and damage should come after success
+            int e1weight = 0;
+            int e2weight = 0;
+
+            switch (this.getSubEvent()) {
+                case "SPELL_CAST_SUCCESS":
+                    e1weight = 1;
+                    break;
+                case "SPELL_MISSED":
+                    e1weight = -1;
+                    break;
+                case "SPELL_DAMAGE":
+                    e1weight = -1;
+                    break;
+            }
+
+            switch (other.getSubEvent()) {
+                case "SPELL_CAST_SUCCESS":
+                    e2weight = 1;
+                    break;
+                case "SPELL_MISSED":
+                    e2weight = -1;
+                    break;
+                case "SPELL_DAMAGE":
+                    e2weight = -1;
+                    break;
+            }
+
+            return e2weight - e1weight;
+        }
+
         return (this.time < other.time) ? -1 : 1;
     }
 }

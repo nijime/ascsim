@@ -88,6 +88,17 @@ public class Utils {
         System.out.println(debugCounter);
     }
 
+    public static double clamp(double val, double min, double max) {
+        if (val < min) {
+            return min;
+        }
+
+        if (val > max) {
+            return max;
+        }
+
+        return val;
+    }
     public static String rightPad(String s, int n) {
         if (s.length() >= n) {
             return s.substring(0, n);

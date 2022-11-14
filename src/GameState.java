@@ -111,6 +111,29 @@ public class GameState {
     }
 
 
+    /** refreshAuraByID
+     *
+     * Refreshes the aura and preserves snapshotting
+     *
+     * @param auraID
+     * @param targetID
+     */
+    public void refreshAuraByID(int auraID, int targetID) {
+        Aura parent = AuraManager.getAuraByID(auraID);
+
+        if (parent == null) {
+            System.out.println("Attempted to refresh an aura with unknown ID");
+            return;
+        }
+
+        if (targetID == 0) {
+            character.refreshAura(parent);
+        } else {
+            targets.get(targetID).refreshAura(parent);
+        }
+    }
+
+
     public SpellEffects getSpellEffects() {
         return spellEffects;
     }

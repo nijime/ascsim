@@ -4,7 +4,6 @@
  *
  */
 
-
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -171,6 +170,7 @@ public class Character extends Entity {
 
         this.meleeHasteP = new Modify(0);
         deriveFrom(meleeHasteP, haste, 0.01 / (double) hasteUnitMelee);
+        this.meleeHasteP.clamp(0.0, 1.0); /// haste cap is 100%
 
         this.rap = new Modify(0);
         if (mainstat == Utils.MainStat.agility) {
@@ -186,6 +186,7 @@ public class Character extends Entity {
 
         this.rangedHasteP = new Modify(0);
         deriveFrom(rangedHasteP, haste, 0.01 / (double) hasteUnitRanged);
+        this.rangedHasteP.clamp(0.0, 1.0); /// haste cap is 100%
 
         this.sp = new Modify(100);
 
@@ -283,6 +284,7 @@ public class Character extends Entity {
 
         this.spellHasteP = new Modify(0);
         deriveFrom(spellHasteP, haste, 0.01 / (double) hasteUnit);
+        this.spellHasteP.clamp(0.0, 1.0); /// haste cap is 100%
     }
 
 
@@ -353,9 +355,9 @@ public class Character extends Entity {
             case 62: // arcane spell
                 return arcaneCritP.getDouble();
 
-            case 00: // phys melee
+            case 0+0: // phys melee
                 return meleeCritP.getDouble();
-            case 01: // phys ranged
+            case 0+1: // phys ranged
                 return rangedCritP.getDouble();
             case 10: // holy melee (is holy melee possible?)
                 return meleeCritP.getDouble();
@@ -396,6 +398,10 @@ public class Character extends Entity {
 
             case 10: // holy melee
                 return holyBonus.getInt();
+            case 0+0: // phys melee
+                return 0;
+            case 0+1: // phys ranged
+                return 0;
             default:
                 System.out.println("[Character] no instructions for spell bonus of merged type " + merged);
                 return 0;

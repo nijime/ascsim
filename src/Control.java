@@ -5,7 +5,7 @@ import java.util.HashSet;
 public class Control {
 
     public static final String DEFAULT_APL = "27180, 27138, 25368, 25364";
-    public static final String DEFAULT_CHAR = "strength=100;agility=100;intellect=100;spirit=100;haste=55;crit=287;hit=42;expertise=12;";
+    public static final String DEFAULT_CHAR = "strength=100;agility=100;intellect=100;spirit=100;haste=210;crit=287;hit=10;expertise=12;";
 
     public static final String INVALID_APL_ERROR = "Invalid APL string";
     public static final String INVALID_CHAR_ERROR = "Invalid character import string";
@@ -31,7 +31,7 @@ public class Control {
         }
 
         HashSet<Integer> toLoad = new HashSet<Integer>();
-        for (int ID : apl.getPrioList()) {
+        for (int ID : apl.getSpellList()) {
             toLoad.add(ID);
         }
 

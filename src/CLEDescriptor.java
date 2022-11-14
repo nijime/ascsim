@@ -120,7 +120,7 @@ public abstract class CLEDescriptor {
         /**
          * Parameters determined by the suffix
          * local # | global # |   DAMAGE   |  SUCCESS  | AURA_REMOVED
-         *      1       2        amount          -            -
+         *      1       2        amount       missed?         -
          *      2       3        school          -            -
          *      3       4        -               -            -
          *      4       5        -         aura to remove     -

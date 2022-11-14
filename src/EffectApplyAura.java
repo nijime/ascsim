@@ -57,6 +57,7 @@ public class EffectApplyAura extends Effect {
 
         gameState.applyAuraByID(auraToApply, target);
 
+        // TODO maybe move event logging to gameState.applyAura...
         CombatLogEvent.PrefixParams pp1 = new CombatLogEvent.PrefixParams(CombatLogEvent.Prefix.SPELL, auraToApply, auraSchool);
         CombatLogEvent.SuffixParams sp1 = new CombatLogEvent.SuffixParams(applyType, -1, -1, -1);
         CombatLogEvent cle_spell_aura_applied = new CombatLogEvent(gameState.time(), pp1, sp1, 0, target);

@@ -99,4 +99,23 @@ public class SpellManager {
         toCast.cast(gameState);
         //return toCast.cast(gameState);
     }
+
+
+    /** cdLeft
+     *
+     * Returns the time remaining until the passed spell's CD is over (or a negative value indicating how long it has been
+     * over for)
+     *
+     * @param spellID
+     * @return
+     */
+    public double cdLeft(int spellID) {
+        if (!spellList.containsKey(spellID)) {
+            System.out.println("[SpellManager] Attempt to get CD of a spell which doesn't exist");
+            System.exit(-1);
+        }
+
+        Spell thisSpell = spellList.get(spellID);
+        return thisSpell.CDOverTime() - gameState.time();
+    }
 }

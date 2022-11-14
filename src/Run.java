@@ -21,7 +21,7 @@ public class Run {
 
     public static void main(String[] args) {
 
-        Control.run(Control.DEFAULT_APL, Control.DEFAULT_CHAR, 120.0);
+        Control.run(Control.DEFAULT_APL, Control.DEFAULT_CHAR, 30.0);
         System.out.println("Sim took " + Model.getExecutionTime() +  " ms");
         /// 11/11 - 13ms + 2ms/minute
 
@@ -30,7 +30,10 @@ public class Run {
         System.out.println("    " + Utils.rightPad("Name", 20) + " : " +
                 Utils.rightPad("Damage" + "", 6) + "| " +
                 Utils.rightPad("dmg %" + "", 6) + "| " +
-                "casts" + "\n    ---------------------------------------------");
+                Utils.rightPad("casts", 6) + "| " +
+                Utils.rightPad("hits", 6) + "| " +
+                Utils.rightPad("misses", 6) + "" +
+                "\n    -----------------------------------------------------------");
 
         for (Model.SpellDisplayRow row : Model.getSpellDisplay()) {
             System.out.println(row);

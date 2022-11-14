@@ -7,12 +7,16 @@ public class Model {
         private int damage;
         private double percent;
         private int casts;
+        private int hits;
+        private int misses;
 
-        SpellDisplayRow(String name, int damage, double percent, int casts) {
+        SpellDisplayRow(String name, int damage, double percent, int casts, int hits, int misses) {
             this.name = name;
             this.damage = damage;
             this.percent = percent;
             this.casts = casts;
+            this.hits = hits;
+            this.misses = misses;
         }
 
         public double getPercent() {
@@ -40,7 +44,9 @@ public class Model {
             String toReturn = "    " + Utils.rightPad(name, 20) + " : " +
                     Utils.rightPad(damage + "", 6) + "| " +
                     Utils.rightPad(percent + "% ", 6) + "| " +
-                    casts;
+                    Utils.rightPad(casts + "", 6) + "| " +
+                    Utils.rightPad(hits + "", 6) + "| " +
+                    Utils.rightPad(misses + "", 6) + "";
 
             return toReturn;
         }
@@ -151,7 +157,9 @@ public class Model {
             int damage = summary.getSpellDamage(ID);
             double percent = summary.getSpellDamagePercent(ID);
             int casts = summary.getNumCasts(ID);
-            SpellDisplayRow thisRow = new SpellDisplayRow(name, damage, percent, casts);
+            int hits = summary.getNumHits(ID);
+            int misses = summary.getNumMisses (ID);
+            SpellDisplayRow thisRow = new SpellDisplayRow(name, damage, percent, casts, hits, misses);
             spellRows.add(thisRow);
         }
 

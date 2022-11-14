@@ -37,7 +37,15 @@ public class AuraInstance {
         return parentAura.getSchool();
     }
 
-    public double getDuration() {
+    public double getTotalDuration() {
         return expirationTime - applicationTime;
+    }
+
+    public void addDuration(double dur) {
+        this.expirationTime += dur;
+    }
+
+    public void refreshDuration(double curTime) {
+        this.expirationTime = curTime + parentAura.getDuration();
     }
 }

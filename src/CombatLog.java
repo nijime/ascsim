@@ -2,6 +2,7 @@ import java.util.LinkedList;
 
 public class CombatLog {
     private static final int COMBATLOG_CAPACITY = 30;
+    public static final boolean PRINT_EVENTS = true;
 
     private LinkedList<CombatLogEvent> eventList;
     private GameState gameState;
@@ -28,12 +29,14 @@ public class CombatLog {
             eventList.removeLast();
         }
 
-        if (cle.getTime() != lastTime) {
+        if (cle.getTime() != lastTime && PRINT_EVENTS) {
             System.out.println();
         }
 
         lastTime = cle.getTime();
-        System.out.println(cle.toString());
+        if (PRINT_EVENTS) {
+            System.out.println(cle.toString());
+        }
 
         processPost(cle);
     }

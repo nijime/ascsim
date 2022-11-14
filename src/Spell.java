@@ -9,6 +9,10 @@ import java.sql.SQLException;
 import java.util.HashMap;
 
 public class Spell {
+    // TODO check value
+    private static final double SPELL_HITCAP = 18.0;
+    private static final double RANGED_HITCAP = 12.0;
+    private static final double MELEE_HITCAP = 7.0;
 
     public enum SpellType {
         melee(0), ranged(1), spell(2);
@@ -220,7 +224,8 @@ public class Spell {
                         Effect effectToDo = new EffectApplyAura(false, arg1);
 
                         CLETemplate triggerTemplate = new CLETemplate(CombatLogEvent.Prefix.SPELL, CombatLogEvent.Suffix.CAST_SUCCESS);
-                        triggerTemplate.watchParamIndex(0, ID);
+                        triggerTemplate.watchParamIndex(0, ID); // watch for cast successes with this ID
+                        triggerTemplate.watchParamIndex(2, 0); // watch for cast successes that dont miss
 
                         CLETrigger spellCastTrigger = new CLETrigger(triggerTemplate, effectToDo);
                         spellCastTrigger.setChance(effectChance);
@@ -268,6 +273,30 @@ public class Spell {
      * @return
      */
     private CombatLogEvent.SuffixParams rollVal(GameState gameState) {
+        /// roll for miss TODO glancing, parry, resist, ...
+        boolean spellMiss = false;
+        int missType = 1;
+        switch (spellType) {
+            case melee:
+                spellMiss = gameState.rand() < (MELEE_HITCAP / 100.0 - gameState.getPlayer().getMeleeHit().getDouble());
+                missType = 1;
+                break;
+            case ranged:
+                spellMiss = gameState.rand() < (RANGED_HITCAP / 100.0 - gameState.getPlayer().getRangedHit().getDouble());
+                missType = 1;
+                break;
+            case spell:
+                spellMiss = gameState.rand() < (SPELL_HITCAP / 100.0 - gameState.getPlayer().getSpellHit().getDouble());
+                missType = 1;
+                break;
+        }
+
+        if (spellMiss) {
+            /// return MISSED suffix
+            return new CombatLogEvent.SuffixParams(CombatLogEvent.Suffix.MISSED, missType, -1, -1);
+        }
+
+        /// a spell with no damage can miss, but can't cause a SPELL_DAMAGE event
         if (!hasDamage()) {
             return null;
         }
@@ -278,7 +307,7 @@ public class Spell {
 
         CombatLogEvent.SuffixParams sp2 = new CombatLogEvent.SuffixParams(CombatLogEvent.Suffix.DAMAGE, amt, school.asInt(), crit ? 1 : 0);
 
-        // returns spell damage suffix
+        /// return damage suffix
         return sp2;
     }
 
@@ -374,12 +403,22 @@ public class Spell {
         this.lastCast = gameState.time();
         this.cdOver = gameState.time() + cooldown.getDouble();
 
+
         double dt = cast_time.getDouble();
         double gcdTime = gcd.getDouble();
+
+        if (spellType == SpellType.spell) {
+            /// assume all and only spells benefit from haste
+            dt = dt / (1.0 + gameState.getPlayer().getSpellHasteP().getDouble());
+            gcdTime = gcdTime / (1.0 + gameState.getPlayer().getSpellHasteP().getDouble());
+        }
+
+        double damageTime = gameState.time() + dt; /// time when damage or miss should occur
 
         gameState.invokeCast(dt);
         gameState.invokeGCD(gcdTime);
 
+        /// cast start event
         CombatLogEvent.PrefixParams pp3 = new CombatLogEvent.PrefixParams(CombatLogEvent.Prefix.SPELL, this.ID, this.school.asInt());
         CombatLogEvent.SuffixParams sp3 = new CombatLogEvent.SuffixParams(CombatLogEvent.Suffix.CAST_START, -1, -1, -1, -1);
         CombatLogEvent cle_cast_start = new CombatLogEvent(gameState.time(), pp3, sp3, 0, 1);
@@ -387,26 +426,48 @@ public class Spell {
         cle_cast_start.setDest(gameState.curTargetID());
         gameState.logEvent(cle_cast_start);
 
-        CombatLogEvent.PrefixParams pp1 = new CombatLogEvent.PrefixParams(CombatLogEvent.Prefix.SPELL, this.ID, this.school.asInt());
-        CombatLogEvent.SuffixParams sp1 = new CombatLogEvent.SuffixParams(CombatLogEvent.Suffix.CAST_SUCCESS, -1, -1, -1, auraToRemove);
-        CombatLogEvent cle_cast_success = new CombatLogEvent(gameState.time()+dt, pp1, sp1, 0, 1);
-        cle_cast_success.setSource(0);
-        cle_cast_success.setDest(gameState.curTargetID());
-        gameState.logEvent(cle_cast_success);
+        /// cast damage OR cast missed event
 
+        CombatLogEvent cle_spell_damage = null;
         CombatLogEvent.SuffixParams sp2 = rollVal(gameState);
+        int missType = 0; /// if missed, pass that info the CAST_SUCCESS
         if (sp2 != null) {
+            if (sp2.suffix == CLEDescriptor.Suffix.MISSED) {
+                missType = sp2.param1; /// if missed, pass that info the CAST_SUCCESS
+            }
+
             CombatLogEvent.PrefixParams pp2 = new CombatLogEvent.PrefixParams(CombatLogEvent.Prefix.SPELL, this.ID, this.school.asInt());
-            CombatLogEvent cle_spell_damage = new CombatLogEvent(gameState.time()+dt, pp2, sp2, 0, 1);// destid = 1 default
-            // check if glancing, resist, ... maybe in rollval
+            cle_spell_damage = new CombatLogEvent(damageTime, pp2, sp2, 0, 1);// destid = 1 default
 
             // TODO check aoe
             cle_spell_damage.setSource(0);
             cle_spell_damage.setDest(gameState.curTargetID());
-            gameState.logEvent(cle_spell_damage);
+
         }
 
-        //return new Event(dt, gcdTime, cle);
+        /// cast success event
+        CombatLogEvent.PrefixParams pp1 = new CombatLogEvent.PrefixParams(CombatLogEvent.Prefix.SPELL, this.ID, this.school.asInt());
+        CombatLogEvent.SuffixParams sp1 = new CombatLogEvent.SuffixParams(CombatLogEvent.Suffix.CAST_SUCCESS, missType, -1, -1, auraToRemove);
+        CombatLogEvent cle_cast_success = new CombatLogEvent(damageTime, pp1, sp1, 0, 1);
+        cle_cast_success.setSource(0);
+        cle_cast_success.setDest(gameState.curTargetID());
+        gameState.logEvent(cle_cast_success);
+
+        if (cle_spell_damage != null) {
+            gameState.logEvent(cle_spell_damage); /// log damage after success, matters for instant cast spells
+            /// if damage occurs before success, summary might fail to log a hit or miss
+        }
+
+    }
+
+    /** CDOverTime
+     *
+     * Return the time at which this spell's CD will be over
+     *
+     * @return
+     */
+    public double CDOverTime() {
+        return cdOver;
     }
 
 }

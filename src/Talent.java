@@ -55,6 +55,10 @@ public class Talent {
 
                 Effect thisEffect = null;
 
+                /// create template beforehand
+                CLETemplate template = new CLETemplate(CLEDescriptor.Prefix.SPELL, CLEDescriptor.Suffix.CAST_SUCCESS);
+                template.watchParamIndex(0, spellSpellID); // watch for matching spell ID
+
                 switch (effectType) {
                     case apply_aura_to_caster:
                         thisEffect = new EffectApplyAura(true, arg1); // TODO currently only allowing independent procs of single effects (separate args out, use array?)
@@ -62,13 +66,12 @@ public class Talent {
                         break;
                     case apply_aura_to_target:
                         thisEffect = new EffectApplyAura(false, arg1); // TODO currently only allowing independent procs of single effects (separate args out, use array?)
-                        AuraManager.loadAuraByID(reader, arg1); // load necessary auras as we find them
+                        AuraManager.loadAuraByID(reader, arg1); /// load necessary auras as we find them
+                        template.watchParamIndex(2, 0); /// watch for non-misses
+                        /// offensive aura applications should only happen if the spell hits
                         break;
                         //TODO other effectTypes
                 }
-
-                CLETemplate template = new CLETemplate(CLEDescriptor.Prefix.SPELL, CLEDescriptor.Suffix.CAST_SUCCESS);
-                template.watchParamIndex(0, spellSpellID); // watch for matching spell ID
 
                 CLETrigger trigger = new CLETrigger(template, thisEffect);
                 trigger.setChance(chance);

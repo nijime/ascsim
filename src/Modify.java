@@ -21,6 +21,10 @@ public class Modify extends SimpleModify {
 
     private boolean changed;
 
+    private boolean clamped;
+    private double minVal;
+    private double maxVal;
+
     public Modify(SimpleModify base) {
         super(base.getDouble());
         this.base = base;
@@ -29,6 +33,8 @@ public class Modify extends SimpleModify {
         this.resulting = base.getDouble();
 
         this.changed = false;
+
+        clamped = false;
     }
 
     public Modify(double base) {
@@ -194,6 +200,10 @@ public class Modify extends SimpleModify {
             changed = false;
         }
 
+        if (clamped) {
+            return (int) Utils.clamp(resulting, minVal, maxVal);
+        }
+
         return (int) resulting;
     }
 
@@ -203,10 +213,24 @@ public class Modify extends SimpleModify {
             changed = false;
         }
 
+        if (clamped) {
+            return Utils.clamp(resulting, minVal, maxVal);
+        }
+
         return resulting;
     }
 
     public boolean changed() {
         return changed;
+    }
+
+    public void clamp(double minVal, double maxVal) {
+        this.clamped = true;
+        this.minVal = minVal;
+        this.maxVal = maxVal;
+    }
+
+    public void unclamp() {
+        this.clamped = false;
     }
 }
