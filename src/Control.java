@@ -12,7 +12,10 @@ public class Control {
 
 
     public static int run(String aplStr, String charStr, double duration) {
-        ArrayList<Integer> IDList = APLStrToList(aplStr);
+        SimpleAPL apl = new SimpleAPL();
+        apl.fromStr(DEFAULT_APL);
+
+        ArrayList<Integer> IDList = apl.getSpellList();
         if (IDList == null) {
             return 1; // INVALID_APL_ERROR
         }
@@ -24,11 +27,9 @@ public class Control {
         }
 
 
-        SimpleAPL apl = new SimpleAPL();
 
-        for (int ID : IDList) {
-            apl.addItem(ID);
-        }
+
+
 
         HashSet<Integer> toLoad = new HashSet<Integer>();
         for (int ID : apl.getSpellList()) {
@@ -65,32 +66,6 @@ public class Control {
         return 0; // successful run
     }
 
-    /** APLStrToList
-     *
-     * Converts APL string to a list of integers, returns null if APL string is deformed
-     *
-     * @param aplString
-     * @return
-     */
-    private static ArrayList<Integer> APLStrToList(String aplString) {
-        String noSpace = aplString.replace(" ", "");
-        String[] splt = noSpace.split(",");
-        ArrayList<Integer> toReturn = new ArrayList<Integer>();
-
-        for (int i = 0; i < splt.length; i++) {
-            int asInt;
-            try {
-                asInt = Integer.parseInt(splt[i]);
-            } catch (Exception e) {
-                // invalid APL string
-                return null;
-            }
-
-            toReturn.add(asInt);
-        }
-
-        return toReturn;
-    }
 
     /** strToStats
      *
