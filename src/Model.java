@@ -31,6 +31,14 @@ public class Model {
             return damage;
         }
 
+        public int getHits() {
+            return hits;
+        }
+
+        public int getMisses() {
+            return misses;
+        }
+
         public String getName() {
             return name;
         }
@@ -163,7 +171,7 @@ public class Model {
             spellRows.add(thisRow);
         }
 
-         Collections.sort(spellRows, Collections.reverseOrder());
+        Collections.sort(spellRows, Collections.reverseOrder());
 
         return spellRows;
     }
